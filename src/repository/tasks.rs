@@ -4,7 +4,7 @@ use crate::{
 };
 use sqlx::{PgPool, query, query_as};
 
-pub async fn create_task_with_audit(pool: &PgPool, payload: CreateTask) -> Result<Task, AppError> {
+pub async fn create_task_with_audit(pool: &PgPool, payload: CreateTask, user_id: i64) -> Result<Task, AppError> {
     let mut tx = pool.begin().await?;
 
     let task_result = query_as!(
@@ -16,7 +16,7 @@ pub async fn create_task_with_audit(pool: &PgPool, payload: CreateTask) -> Resul
         "#,
         payload.title,
         payload.description,
-        payload.user_id
+        user_id
     )
     .fetch_one(&mut *tx)
     .await?;

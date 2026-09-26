@@ -14,8 +14,7 @@ pub struct Task{
 #[derive(Deserialize)]
 pub struct CreateTask{
     pub title: String,
-    pub description: Option<String>,
-    pub user_id: i64
+    pub description: Option<String>
 }
 #[derive(Deserialize)]
 pub struct UpdateTask{

@@ -1,16 +1,20 @@
 use std::env;
 use sqlx::{PgPool,postgres::PgPoolOptions};
 
-use axum::{routing::{get,post,patch,delete}, Router};
+use axum::{routing::{get,post,patch,delete}, Router, middleware as axum_middleware};
+
+use crate::handlers::tasks::{*};
+use crate::middleware::auth::auth_middleware;
 
 mod handlers;
 mod models;
 mod repository;
+mod middleware;
 mod error;
 
 #[derive(Clone)]
 pub struct AppState{
-    db: PgPool
+    db: PgPool,
 }
 
 #[tokio::main]
@@ -22,13 +26,22 @@ async fn main() -> Result<(), sqlx::Error> {
     let state = AppState{
         db: pool
     };
+    let protected_routes = Router::new()
+    .route("/tasks", post(create_task))
+    .route("/tasks", get(get_tasks))
+    .route("/tasks/{id}", get(get_task))
+    .route("/tasks/{id}", delete(delete_task))
+    .route("/tasks/{id}", patch(update_task));
 
+    let protected_routes = protected_routes
+    .route_layer(
+        axum_middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        )
+    );
     let app = Router::new()
-    .route("/tasks", post(handlers::tasks::create_task))
-    .route("/tasks", get(handlers::tasks::get_tasks))
-    .route("/tasks/{id}", get(handlers::tasks::get_task))
-    .route("/tasks/{id}", patch(handlers::tasks::update_task))
-    .route("/tasks/{id}", delete(handlers::tasks::delete_task))
+    .merge(protected_routes)
     .route("/auth/register", post(handlers::auth::register))
     .route("/auth/login", post(handlers::auth::login))
     .with_state(state);

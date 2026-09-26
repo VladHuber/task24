@@ -10,7 +10,7 @@ use argon2::{
 use jsonwebtoken::{encode, Header, EncodingKey};
 use std::env;
 
-use crate::{AppState, repository::{self, auth::{AutorizationUser, CreateUser, User, get_user}}};
+use crate::{AppState, repository::{self, auth::{AutorizationUser, CreateUser, User, get_user}}, middleware::auth::Claims};
 use crate::error::AppError;
 
 #[derive(Deserialize)]
@@ -43,11 +43,7 @@ pub struct AuthResonse{
     token: String
 }
 
-#[derive(Serialize)]
-pub struct Claims{
-    sub: i64,
-    exp: i64
-}
+
 pub async fn login(
     State(state) : State<AppState>,
     Json(payload): Json<LoginRequest>

@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State, Query},
+    extract::{Path, State, Query, Extension},
     http::StatusCode,
 };
 
@@ -8,12 +8,14 @@ use crate::{AppState, models::{PaginationParams, TaskWithUser}};
 use crate::models::{CreateTask, Task, UpdateTask};
 use crate::repository;
 use crate::error::AppError;
+use crate::middleware::auth::AuthUser;
 
 pub async fn create_task(
+    Extension(auth_user): Extension<AuthUser>,
     State(state): State<AppState>,
     Json(payload): Json<CreateTask>,
 ) -> Result<(StatusCode, Json<Task>), AppError> {
-    let task = repository::tasks::create_task_with_audit(&state.db, payload)
+    let task = repository::tasks::create_task_with_audit(&state.db, payload, auth_user.user_id)
         .await?;
 
     Ok((StatusCode::CREATED, Json(task)))
