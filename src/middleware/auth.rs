@@ -1,8 +1,5 @@
 use axum::{
-    extract::{State, Request},
-    http::{header::AUTHORIZATION},
-    middleware::Next,
-    response::Response,
+    extract::{FromRequestParts, Request, State}, http::header::AUTHORIZATION, middleware::Next, response::Response,
 };
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 
@@ -22,6 +19,22 @@ use serde::{Deserialize, Serialize};
 pub struct Claims {
     pub sub: i64,
     pub exp: i64,
+}
+
+impl <S> FromRequestParts<S> for AuthUser where 
+    S: Send + Sync
+{
+    type Rejection = AppError;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection>
+    {
+        parts.extensions.get::<AuthUser>()
+        .cloned()
+        .ok_or(AppError::Unauthorized)
+    }    
 }
 
 pub async fn auth_middleware(

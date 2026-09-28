@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State, Query, Extension},
+    extract::{Path, State, Query},
     http::StatusCode,
 };
 
@@ -11,7 +11,7 @@ use crate::error::AppError;
 use crate::middleware::auth::AuthUser;
 
 pub async fn create_task(
-    Extension(auth_user): Extension<AuthUser>,
+    auth_user: AuthUser,
     State(state): State<AppState>,
     Json(payload): Json<CreateTask>,
 ) -> Result<(StatusCode, Json<Task>), AppError> {
